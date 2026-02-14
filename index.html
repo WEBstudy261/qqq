@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>高1 データ分析クイズ</title>
+    <link rel="stylesheet" href="https://pyscript.net/releases/2024.1.1/core.css">
+    <script type="module" src="https://pyscript.net/releases/2024.1.1/core.js"></script>
+    <style>
+        body { font-family: sans-serif; text-align: center; background-color: #f4f7f6; padding: 20px; }
+        .card { background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); max-width: 500px; margin: auto; }
+        .data-box { background: #eef; padding: 15px; border-radius: 5px; font-weight: bold; margin: 10px 0; min-height: 50px; }
+        input { width: 80px; padding: 5px; margin: 5px; }
+        button { padding: 10px 20px; cursor: pointer; background: #28a745; color: white; border: none; border-radius: 5px; margin-top: 10px; }
+        #result { margin-top: 20px; white-space: pre-wrap; text-align: left; display: inline-block; }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <h2>📊 データ分析クイズ</h2>
+    <p>1〜99の数値をランダム生成します。</p>
+    
+    <div id="data-display" class="data-box">「問題作成」を押してスタート！</div>
+    
+    <div>平均(小数第1位): <input type="number" id="in_mean" step="0.1"></div>
+    <div>第1四分位数(Q1): <input type="number" id="in_q1" step="0.5"></div>
+    <div>中央値(Q2): <input type="number" id="in_q2" step="0.5"></div>
+    <div>第3四分位数(Q3): <input type="number" id="in_q3" step="0.5"></div>
+
+    <button py-click="generate_data">1. 新しい問題を作成</button><br>
+    <button py-click="check_answer" style="background:#007bff">2. 答え合わせ</button>
+
+    <div id="result"></div>
+</div>
+
+<script type="py">
+import random
+import statistics
+from pyscript import document
+
+# グローバル変数で正解を保持
+ans = {}
+
+def generate_data(event):
+    n = random.randint(10, 15)
+    data = sorted([random.randint(1, 99) for _ in range(n)])
+    
+    # 計算 (高校数学流)
+    mean_val = round(statistics.mean(data), 1)
+    q2 = statistics.median(data)
+    mid = n // 2
+    low_half = data[:mid]
+    high_half = data[mid + (n % 2):]
+    q1 = statistics.median(low_half)
+    q3 = statistics.median(high_half)
+    
+    global ans
+    ans = {"mean": mean_val, "q1": q1, "q2": q2, "q3": q3}
+    
+    document.getElementById("data-display").innerText = f"データ: {data}\n(n={n})"
+    document.getElementById("result").innerText = ""
+
+def check_answer(event):
+    if not ans: return
+    
+    keys = ["mean", "q1", "q2", "q3"]
+    labels = ["平均", "Q1", "Q2", "Q3"]
+    output = []
+    
+    for k, lab in zip(keys, labels):
+        val_str = document.getElementById(f"in_{k}").value
+        if not val_str:
+            output.append(f"⚠️ {lab}を入力してください")
+            continue
+            
+        val = float(val_str)
+        if val == ans[k]:
+            output.append(f"✅ {lab}: 正解！")
+        else:
+            output.append(f"❌ {lab}: 不正解 (正解: {ans[k]})")
+            
+    document.getElementById("result").innerText = "\n".join(output)
+</script>
+
+</body>
+</html>
